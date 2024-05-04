@@ -6,6 +6,7 @@ from src.database import SessionLocal, engine
 
 from sqlalchemy.orm import Session
 
+import json
 from typing import Annotated
 from passlib.context import CryptContext
 
@@ -86,6 +87,13 @@ def logout(user: schemas.UserLogout, db: Session = Depends(get_db)):
 
 @app.post("/securities", response_model=schemas.Security)
 def create_security(security: schemas.SecurityCreate, db: Session = Depends(get_db)):
+    db_securities = crud.get_securities(db)
+    if not db_securities:
+        with open('./init_securities.json', 'r') as file:
+            init_securities = json.load(file)
+
+        crud.create_init_securities(db, security, init_securities)
+    
     db_security = crud.create_security(db, security)
     return db_security
 
