@@ -3,3 +3,4 @@ fastapi
 pydantic
 bcrypt
 passlib
+python-dotenv
