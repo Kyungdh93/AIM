@@ -36,3 +36,13 @@ class Security(Base):
     code = Column(String, unique=True, index=True)
     name = Column(String)
     price = Column(Integer)
+
+
+class Balance(Base):
+    __tablename__ = "balances"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    balance = Column(Integer)
+    
+    # Relationship with users
+    user = relationship("User", back_populates="balance_info")

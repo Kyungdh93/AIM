@@ -23,7 +23,7 @@ def create_user(db: Session, username: str, password: str):
 
 def create_balance(db: Session, user_id: int):
     try:
-        db_balance = models.Balance(user_id=user_id, balance=0.0)
+        db_balance = models.Balance(user_id=user_id, balance=0)
         db.add(db_balance)
         db.commit()
         db.refresh(db_balance)

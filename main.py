@@ -108,6 +108,15 @@ def delete_security(security_id: int, db: Session = Depends(get_db)):
     return db_security
 
 
+@app.get("/balance")
+def get_balance(current_user: Annotated[schemas.User, Depends(get_current_active_user)], db: Session = Depends(get_db)):
+    # user_balance = db.query(func.sum(models.Transaction.amount)).filter(models.Transaction.user_id == current_user.id).scalar()
+    user_balance = crud.get_balance(db, user_id=current_user.id)
+    if user_balance is None:
+        user_balance = 0
+    
+    return {"user_id": current_user.id, "balance": user_balance}
+
 
 if __name__ == "__main__":
 	import uvicorn

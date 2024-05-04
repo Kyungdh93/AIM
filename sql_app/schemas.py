@@ -4,7 +4,7 @@ from pydantic import BaseModel
 # Balance
 class Balance(BaseModel):
     user_id: int
-    balance: float
+    balance: int
 
     class Config:
         orm_mode = True
