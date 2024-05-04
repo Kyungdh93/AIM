@@ -41,9 +41,34 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
 async def get_current_active_user(
     current_user: Annotated[schemas.User, Depends(get_current_user)],
 ):
-    # if current_user.disabled:
-    #     raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+
+def max_portfolio(balance, securities):
+    dp = [0] * (balance + 1)
+    portfolio = [[] for _ in range(balance + 1)]
+
+    for stock, price in securities.items():
+        for i in range(balance, price - 1, -1):
+            if dp[i - price] + price > dp[i]:
+                dp[i] = dp[i - price] + price
+                portfolio[i] = portfolio[i - price] + [stock]
+
+    return portfolio[balance]
+
+
+def half_portfolio(balance, securities):
+    half_balance = balance // 2
+    dp = [0] * (half_balance + 1)
+    portfolio = [[] for _ in range(half_balance + 1)]
+
+    for stock, price in securities.items():
+        for i in range(half_balance, price - 1, -1):
+            if dp[i - price] + price > dp[i]:
+                dp[i] = dp[i - price] + price
+                portfolio[i] = portfolio[i - price] + [stock]
+
+    return portfolio[half_balance]
 
 
 @app.post("/users", response_model=schemas.User)
@@ -83,6 +108,52 @@ def logout(user: schemas.UserLogout, db: Session = Depends(get_db)):
     crud.create_history(db, username=user.username, event='LOGOUT')
     return {"message": "Logout successful"}
 
+
+@app.post("/transactions", response_model=schemas.Transaction)
+def create_transaction(current_user: Annotated[schemas.User, Depends(get_current_active_user)], transaction: schemas.TransactionCreate, db: Session = Depends(get_db)):
+    user_balance = crud.get_balance(db, user_id=current_user.id)
+    if user_balance is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User balance not found")
+    
+    if transaction.transaction_type == "deposit":
+        new_balance = user_balance.balance + transaction.amount
+    elif transaction.transaction_type == "withdraw":
+        new_balance = user_balance.balance - transaction.amount
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid transaction type")
+
+    if transaction.transaction_type == "withdraw" and new_balance < 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+
+    db_transaction = crud.create_transaction(db, amount=transaction.amount, transaction_type=transaction.transaction_type, username=current_user.username)
+    
+    user_balance.balance = new_balance
+    db.add(user_balance)
+    db.commit()
+    db.refresh(user_balance)
+
+    return db_transaction
+
+
+@app.post("/portfolios", response_model=schemas.Portfolio)
+def create_portfolio(portfolio: schemas.PortfolioCreate, current_user: Annotated[schemas.User, Depends(get_current_active_user)], db: Session = Depends(get_db)):
+    if portfolio.risk_level not in ["type1", "type2"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid risk level")
+
+    db_securities = crud.get_securities(db)
+    if len(db_securities) < 10:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Number of securities is less than 10")
+
+    securities = {security.code: security.price for security in db_securities}
+
+    user_balance = crud.get_balance(db, user_id=current_user.id)
+    if portfolio.risk_level == "type1":
+        portfolio_result = max_portfolio(user_balance.balance, securities)
+    else:
+        portfolio_result = half_portfolio(user_balance.balance, securities)
+
+    db_portfolio = crud.create_portfolio(db, user_id=current_user.id, risk_level=portfolio.risk_level, portfolio=",".join(portfolio_result))
+    return db_portfolio
 
 
 @app.post("/securities", response_model=schemas.Security)
@@ -129,4 +200,3 @@ def get_balance(current_user: Annotated[schemas.User, Depends(get_current_active
 if __name__ == "__main__":
 	import uvicorn
 	uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-    # python -m main
