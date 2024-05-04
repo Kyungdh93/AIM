@@ -1,8 +1,8 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from sql_app import crud, models, schemas
-from sql_app.database import SessionLocal, engine
+from src import crud, models, schemas
+from src.database import SessionLocal, engine
 
 from sqlalchemy.orm import Session
 

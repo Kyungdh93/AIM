@@ -29,6 +29,29 @@ class UserHistory(Base):
     user = relationship("User", back_populates="users_history")
 
 
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(Integer, primary_key=True, index=True)
+    time = Column(DateTime(timezone=True), default=sqlalchemy.func.now())
+    username = Column(Integer, ForeignKey("users.username"))
+    amount = Column(Float)
+    transaction_type = Column(String)
+    # user_id = Column(Integer, ForeignKey("users.id"))
+
+    # Relationship with users
+    user = relationship("User", back_populates="transactions")
+
+
+class Portfolio(Base):
+    __tablename__ = "portfolios"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    risk_level = Column(String)
+    portfolio = Column(String)
+
+    # Relationship with users
+    user = relationship("User", back_populates="portfolios")
+
 
 class Security(Base):
     __tablename__ = "securities"
