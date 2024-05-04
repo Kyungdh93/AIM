@@ -3,4 +3,5 @@ fastapi
 pydantic
 bcrypt
 passlib
+pymysql
 python-dotenv
