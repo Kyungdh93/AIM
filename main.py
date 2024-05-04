@@ -84,6 +84,30 @@ def logout(user: schemas.UserLogout, db: Session = Depends(get_db)):
 
 
 
+@app.post("/securities", response_model=schemas.Security)
+def create_security(security: schemas.SecurityCreate, db: Session = Depends(get_db)):
+    db_security = crud.create_security(db, security)
+    return db_security
+
+
+@app.put("/securities/{security_id}", response_model=schemas.Security)
+def update_security_price(security_id: int, price: int, db: Session = Depends(get_db)):
+    db_security = crud.update_security(db, security_id=security_id, price=price)
+    if not db_security:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Security not found")
+
+    return db_security
+
+
+@app.delete("/securities/{security_id}", response_model=schemas.Security)
+def delete_security(security_id: int, db: Session = Depends(get_db)):
+    db_security = crud.delete_security(db, security_id=security_id)
+    if not db_security:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Security not found")
+    
+    return db_security
+
+
 
 if __name__ == "__main__":
 	import uvicorn

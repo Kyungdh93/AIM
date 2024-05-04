@@ -38,5 +38,19 @@ class UserLogout(UserBase):
 class UserHistory(BaseModel):
     username: str
     event: str
+
+# Security
+class SecurityBase(BaseModel):
+    code: str
+    name: str
+    price: int
+
+
+class Security(SecurityBase):
     class Config:
         orm_mode = True
+
+
+class SecurityCreate(SecurityBase):
+    pass
+
