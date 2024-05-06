@@ -9,8 +9,8 @@ from .database import Base
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    password = Column(String)
+    username = Column(String(50), unique=True, index=True)
+    password = Column(String(100))
 
     users_history = relationship("UserHistory", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
@@ -23,8 +23,8 @@ class UserHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     time = Column(DateTime(timezone=True), default=sqlalchemy.func.now())
     # user_id = Column(Integer, ForeignKey("users.id"))
-    username = Column(Integer, ForeignKey("users.username"))
-    event = Column(String)
+    username = Column(String(50), ForeignKey("users.username"))
+    event = Column(String(255))
 
     user = relationship("User", back_populates="users_history")
 
@@ -33,9 +33,9 @@ class Transaction(Base):
     __tablename__ = "transactions"
     id = Column(Integer, primary_key=True, index=True)
     time = Column(DateTime(timezone=True), default=sqlalchemy.func.now())
-    username = Column(Integer, ForeignKey("users.username"))
+    username = Column(String(50), ForeignKey("users.username"))
     amount = Column(Float)
-    transaction_type = Column(String)
+    transaction_type = Column(String(50))
     # user_id = Column(Integer, ForeignKey("users.id"))
 
     # Relationship with users
@@ -46,8 +46,8 @@ class Portfolio(Base):
     __tablename__ = "portfolios"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    risk_level = Column(String)
-    portfolio = Column(String)
+    risk_level = Column(String(50))
+    portfolio = Column(String(255))
 
     # Relationship with users
     user = relationship("User", back_populates="portfolios")
@@ -56,8 +56,8 @@ class Portfolio(Base):
 class Security(Base):
     __tablename__ = "securities"
     id = Column(Integer, primary_key=True, index=True)
-    code = Column(String, unique=True, index=True)
-    name = Column(String)
+    code = Column(String(50), unique=True, index=True)
+    name = Column(String(50))
     price = Column(Integer)
 
 
